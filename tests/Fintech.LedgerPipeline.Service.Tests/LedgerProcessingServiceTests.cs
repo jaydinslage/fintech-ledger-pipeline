@@ -1,5 +1,6 @@
 using Fintech.LedgerPipeline.Service.Models;
 using Fintech.LedgerPipeline.Service.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Fintech.LedgerPipeline.Service.Tests;
@@ -10,7 +11,7 @@ public class LedgerProcessingServiceTests
     [TestMethod]
     public void Process_WithValidEntry_ReturnsProcessedEntry()
     {
-        var service = new LedgerProcessingService();
+        var service = new LedgerProcessingService(NullLogger<LedgerProcessingService>.Instance);
         var entry = new LedgerEntry
         {
             AccountId = "acct-1001",
@@ -31,7 +32,7 @@ public class LedgerProcessingServiceTests
     [TestMethod]
     public void Process_WithMissingAccountId_ThrowsArgumentException()
     {
-        var service = new LedgerProcessingService();
+        var service = new LedgerProcessingService(NullLogger<LedgerProcessingService>.Instance);
         var entry = new LedgerEntry
         {
             AccountId = string.Empty,
