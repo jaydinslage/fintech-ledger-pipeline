@@ -1,14 +1,23 @@
+using Fintech.LedgerPipeline.Service.Events;
 using Fintech.LedgerPipeline.Service.Models;
+using Fintech.LedgerPipeline.Service.Repositories;
 
 namespace Fintech.LedgerPipeline.Service.Services;
 
 public class LedgerProcessingService : ILedgerProcessingService
 {
     private readonly ILogger<LedgerProcessingService> _logger;
+    private readonly ILedgerRepository _repository;
+    private readonly IReadOnlyList<ILedgerPipelineStep> _pipelineSteps;
 
-    public LedgerProcessingService(ILogger<LedgerProcessingService> logger)
+    public LedgerProcessingService(
+        ILogger<LedgerProcessingService> logger,
+        ILedgerRepository? repository = null,
+        IReadOnlyList<ILedgerPipelineStep>? pipelineSteps = null)
     {
         _logger = logger;
+        _repository = repository ?? new InMemoryLedgerRepository();
+        _pipelineSteps = pipelineSteps ?? [];
     }
 
     public LedgerEntry Process(LedgerEntry entry)
@@ -38,11 +47,21 @@ public class LedgerProcessingService : ILedgerProcessingService
             entry.Currency = "USD";
         }
 
+        foreach (var step in _pipelineSteps)
+        {
+            entry = step.Execute(entry);
+        }
+
         entry.Metadata ??= [];
         entry.Metadata["processed"] = "true";
         entry.Metadata["pipeline"] = "ledger-intake";
 
         _logger.LogInformation("Ledger entry processed for account {AccountId} from {SourceSystem}", entry.AccountId, entry.SourceSystem);
+
+        _ = _repository.SaveAsync(entry);
+        _logger.LogInformation("Ledger entry accepted and queued for persistence: {AccountId}", entry.AccountId);
+
+        _ = new LedgerEntryAcceptedEvent(entry.AccountId, entry.Amount, entry.SourceSystem);
         return entry;
     }
 }

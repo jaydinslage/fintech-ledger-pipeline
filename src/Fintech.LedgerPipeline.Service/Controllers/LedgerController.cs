@@ -30,7 +30,7 @@ public class LedgerController : ControllerBase
 
         try
         {
-            var result = _service.Process(entry);
+            var result = _service.Process(entry!);
             _logger.LogInformation("Ledger entry processed successfully for account {AccountId}", result.AccountId);
             return Ok(result);
         }

@@ -1,4 +1,5 @@
 using Fintech.LedgerPipeline.Service.Middleware;
+using Fintech.LedgerPipeline.Service.Repositories;
 using Fintech.LedgerPipeline.Service.Services;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -10,7 +11,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
+builder.Services.AddSingleton<ILedgerRepository, InMemoryLedgerRepository>();
 builder.Services.AddSingleton<ILedgerProcessingService, LedgerProcessingService>();
+builder.Services.AddSingleton<ILedgerPipelineStep, ValidationStep>();
+builder.Services.AddSingleton<ILedgerPipelineStep, EnrichmentStep>();
+builder.Services.AddSingleton<ILedgerPipelineStep, RoutingStep>();
 
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole(options =>
