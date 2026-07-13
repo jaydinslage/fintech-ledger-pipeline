@@ -6,10 +6,13 @@ Fintech Ledger Pipeline is a lightweight ASP.NET Core service for ingesting ledg
 
 - Exposes a REST endpoint for ledger ingestion
 - Validates required fields before processing
-- Applies basic processing metadata to each entry
-- Uses dependency injection with an interface-based processing service
+- Applies a lightweight pipeline of steps (validation, enrichment, routing)
+- Uses a persistence abstraction with an in-memory implementation for future backing stores
+- Emits structured JSON logs with correlation IDs and request-scoped context
+- Includes OpenTelemetry tracing and metrics for request observability
 - Returns clear validation and server error responses
 - Includes OpenAPI support in development
+- Includes a Dockerfile for container-based runs
 
 ## API Overview
 
@@ -44,7 +47,10 @@ Content-Type: application/json
   "sourceSystem": "core-banking",
   "metadata": {
     "processed": "true",
-    "pipeline": "ledger-intake"
+    "pipeline": "ledger-intake",
+    "validation": "validated",
+    "enrichment": "enriched",
+    "routing": "routed"
   }
 }
 ```
@@ -67,7 +73,9 @@ The service is organized around a small layered design:
 - Controllers handle incoming HTTP requests
 - Services contain the business processing logic behind an interface contract
 - Models define the request and response payload contract
-- Validation and error handling are applied at the service boundary
+- A lightweight pipeline step pattern can be composed for validation, enrichment, and routing
+- A repository abstraction is present with an in-memory implementation for future persistence
+- Structured logs and OpenTelemetry instrumentation provide request-level observability
 
 This keeps the entrypoint thin while allowing the processing behavior to evolve independently.
 
@@ -77,7 +85,10 @@ This keeps the entrypoint thin while allowing the processing behavior to evolve 
 src/
   Fintech.LedgerPipeline.Service/
     Controllers/
+    Events/
     Models/
+    Pipelines/
+    Repositories/
     Services/
     Program.cs
     appsettings.json
@@ -86,6 +97,8 @@ src/
 tests/
   Fintech.LedgerPipeline.Service.Tests/
     LedgerProcessingServiceTests.cs
+    LedgerPipelineTests.cs
+    RequestLoggingMiddlewareTests.cs
 ```
 
 ## Running the Service
@@ -102,4 +115,10 @@ To run the tests:
 
 ```bash
 dotnet test tests/Fintech.LedgerPipeline.Service.Tests/Fintech.LedgerPipeline.Service.Tests.csproj
+```
+
+To build the container image:
+
+```bash
+docker build -t fintech-ledger-pipeline .
 ```
