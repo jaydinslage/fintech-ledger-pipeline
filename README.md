@@ -5,8 +5,10 @@ Fintech Ledger Pipeline is a lightweight ASP.NET Core service for ingesting ledg
 ## Features
 
 - Exposes a REST endpoint for ledger ingestion
+- Validates required fields before processing
 - Applies basic processing metadata to each entry
-- Uses dependency injection for the processing service
+- Uses dependency injection with an interface-based processing service
+- Returns clear validation and server error responses
 - Includes OpenAPI support in development
 
 ## API Overview
@@ -47,13 +49,25 @@ Content-Type: application/json
 }
 ```
 
+### Validation Rules
+
+The service validates the incoming payload before processing:
+
+- `accountId` is required
+- `sourceSystem` is required
+- `amount` must be greater than zero
+- `currency` defaults to `USD` when omitted
+
+Invalid requests return a `400 Bad Request` response with an error message.
+
 ## Architecture Overview
 
 The service is organized around a small layered design:
 
 - Controllers handle incoming HTTP requests
-- Services contain the business processing logic
+- Services contain the business processing logic behind an interface contract
 - Models define the request and response payload contract
+- Validation and error handling are applied at the service boundary
 
 This keeps the entrypoint thin while allowing the processing behavior to evolve independently.
 
@@ -68,6 +82,10 @@ src/
     Program.cs
     appsettings.json
     appsettings.Development.json
+
+tests/
+  Fintech.LedgerPipeline.Service.Tests/
+    LedgerProcessingServiceTests.cs
 ```
 
 ## Running the Service
@@ -79,3 +97,9 @@ dotnet run --project src/Fintech.LedgerPipeline.Service
 ```
 
 Then send a request to the endpoint above using your preferred HTTP client.
+
+To run the tests:
+
+```bash
+dotnet test tests/Fintech.LedgerPipeline.Service.Tests/Fintech.LedgerPipeline.Service.Tests.csproj
+```

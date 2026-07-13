@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Fintech.LedgerPipeline.Service/Fintech.LedgerPipeline.Service.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Fintech.LedgerPipeline.Service.Tests/Fintech.LedgerPipeline.Service.Tests.csproj" />
+  </Folder>
 </Solution>
